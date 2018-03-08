@@ -1,4 +1,5 @@
 #include <iostream>
+#define EG_LPNUM_MEMSLAB 0
 #include "QSoptxx.h"
 
 QSoptxx::QSoptxx(const vector<vector<mpq_class>>& columns, const vector<int>& cost, const vector<mpq_class>& rhs, int objsense): _cmatcnt(NULL),

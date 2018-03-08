@@ -64,44 +64,23 @@ void APSATTest::testPSATConditionalProbUndef()
     CPPUNIT_ASSERT(PSatInst->solve());
 }
 
-/*class ErrorCostCalculator: public CostFunctionCalculator {
-    private:
-        PSolverData &_sd;
-        int *costVector;
-    public:
-        ErrorCostCalculator(PSolverData &sd): _sd(sd) {
-            costVector = new int[sd._nProb+1];
-            for( unsigned int i=0; i < sd._nProb+1; i++ )
-                costVector[i]=0;
-        }
-        ~ErrorCostCalculator() {
-            delete[] costVector;
-        }
-        int *calculateCostFunction(const Matrix &) {
-            for(unsigned int i=0; i < _sd._nProb+1; i++ )
-                if (_sd.getColumnExtra(i) > -1)
-                    costVector[i]=1;
-            return costVector;
-        }
-        int *recalculateColumnExitBasis(const Matrix &basis, int) {
-            return calculateCostFunction(basis);
-        }
-};*/
-
 void APSATTest::testPSATUnsatWithErrors()
 {
-/*    makeRational probs[3] = {makeRational(3,5), makeRational(3,5), makeRational(3,5)};
+    vector<mpq_class> probs({makeRational(3,5), makeRational(3,5), makeRational(3,5)});
+    PSatInst->setProbabilities(probs);
     ClausalFormula gamma={{1,2}, {1,3}, {2,3}};
-    vector<vector<makeRational>> errorColumns = {
+    PSatInst->setGamma(gamma);
+    vector<vector<mpq_class>> errorColumns = {
         {0,1,0,0},
         {0,0,1,0},
         {0,0,0,1},
         {0,0,0,-1},
         {0,0,-1,0},
         {0,-1,0,0}};
-    PSatInst = new PSAT(3 /*nVar, 3 /*nProb, 3 /* nClause , probs, 5 /*precision, errorColumns, gamma);
-    ErrorCostCalculator costFunction(PSatInst->getSolverData());
-    double cost = PSatInst->oSolve(costFunction);
-    CPPUNIT_ASSERT(cost == makeRational(1,5));*/
-    CPPUNIT_ASSERT(false);
+    PSatInst->setAuxColumns(errorColumns);
+    PSatInst->setAuxColumnsCost({1,1,1,1,1,1});
+    mpq_class cost = PSatInst->oSolve();
+    cout << "Cost: " << cost << endl;
+    CPPUNIT_ASSERT(cost == makeRational(1,15));
 }
+//TODO: Teste com custo em coluna gerada

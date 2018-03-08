@@ -80,8 +80,8 @@ void HMMModelTest::testPSATInstance() {
 
 void HMMModelTest::testSolvePSATInstace() {
     list<unsigned int> sentence = {1,2};
-    PSATInstance problem = model->generatePSATInstance(sentence);
-    CPPUNIT_ASSERT(false);
+    PSATInstance problem(model->generatePSATInstance(sentence));
+    APSATSolver solver(problem.getDimacsNumVar(), const vector<mpq_class>& probs, const vector<vector<mpq_class>>& auxColumns, const ClausalFormula& gamma);
     /*PSAT PSatInstSolver(problem, 2);
     CPPUNIT_ASSERT(PSatInstSolver.solve());
     //Testa valor do resultado

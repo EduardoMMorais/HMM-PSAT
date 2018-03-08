@@ -23,14 +23,19 @@ void APSATSolver::setProbabilities(const vector<mpq_class>& probs) {
 void APSATSolver::setAuxColumns(const vector<vector<mpq_class>>& auxColumns) {
     _auxiliaryColumns.clear();
     _auxiliaryColumns.resize(auxColumns.size());
+    _auxiliaryColumnsCost.resize(auxColumns.size());
     for(unsigned int col = 0; col < auxColumns.size(); col++) {
         _auxiliaryColumns[col].resize(_numVars+1);
         _auxiliaryColumns[col][0] = 1;
         for(unsigned int i = 0; i<_numVars; i++) {
             _auxiliaryColumns[col][i+1] = auxColumns[col][i];
         }
+        _auxiliaryColumnsCost[col] = 0;
     }
+}
 
+void APSATSolver::setAuxColumnsCost(const vector<int>& auxColumnsCost) {
+    _auxiliaryColumnsCost = auxColumnsCost;
 }
 
 void APSATSolver::setNumVars(unsigned int numVars) {
@@ -82,14 +87,17 @@ term_t APSATSolver::createGammaTerm() {
     return term;
 }
 
+
 bool APSATSolver::solve() {
-    bool isSAT = false, solving = true;
+    return (oSolve() == 0);
+}
+
+mpq_class APSATSolver::oSolve() {
+    bool solving = true;
     unsigned int nIter = 0;
 
-    _columnId = 0;
-
     vector<vector<mpq_class>> columns(_auxiliaryColumns);
-    vector<int> cost(_auxiliaryColumns.size(), 0);
+    vector<int> cost(_auxiliaryColumnsCost);
     // Basic columns
     for(unsigned int i=0; i <= _numVars; i++) {
         vector<mpq_class> col(_numVars+1);
@@ -97,7 +105,7 @@ bool APSATSolver::solve() {
             col[j] = 1;
         }
         columns.push_back(col);
-        cost.push_back(1);
+        cost.push_back(2);
     }
 
     ctx_config_t *config = yices_new_config();
@@ -116,7 +124,7 @@ bool APSATSolver::solve() {
     yices_push(ctx);
     yices_push(ctx);
 
-    mpq_class lastcost(columns.size()+1);
+    mpq_class lastcost((columns.size()+1)*2), current_cost(0);
     QSoptxx qs(columns, cost, _probabilities);
     while (solving) {
         #ifndef NDEBUG
@@ -128,17 +136,17 @@ bool APSATSolver::solve() {
             qs.dumpLP("dump.lp");
             break;
         }
-        mpq_class cost(qs.getOptimalCost());
-        if (cost > lastcost) {
+        mpq_class temp(qs.getOptimalCost()); // To avoid a qsopt bug
+        current_cost = temp;
+        if (current_cost > lastcost) {
             solving = false;
-            cerr << "Cost increased! Last iteration: " << lastcost << " Now: " << cost << endl;
+            cerr << "Cost increased! Last iteration: " << lastcost << " Now: " << current_cost << endl;
             break;
         }
         #ifndef NDEBUG
-        cout << "COST: " << cost << endl;
+        cout << "COST: " << current_cost << endl;
         #endif
-        if (cost == 0) {
-            isSAT = true;
+        if (current_cost == 0) {
             solving = false;
             break;
         }
@@ -146,19 +154,29 @@ bool APSATSolver::solve() {
         vector<mpq_class> gencol, reducedCostCoefs;
         qs.getReducedCostCoefs(reducedCostCoefs);
         generateNextColumn(gencol, reducedCostCoefs, ctx);
+        int costGencol = 0; // TODO
         if (gencol.size() > 0)
-            qs.add_col(gencol, 0);
+            qs.add_col(gencol, costGencol);
         else
             solving = false;
-        lastcost = cost;
+        lastcost = current_cost;
         nIter++;
         #ifndef NDEBUG
         cout << endl;
         #endif
     }
-
+    #ifndef NDEBUG
+    qs.dumpLP("problem.lp");
+    vector<mpq_class> solution;
+    qs.getPrimalSolution(solution);
+    cout << "Solution: ";
+    for(mpq_class &x: solution) {
+        cout << " " << x;
+    }
+    cout << endl;
+    #endif
     yices_free_context(ctx);
-    return isSAT;
+    return current_cost;
 }
 
 void APSATSolver::generateNextColumn(vector<mpq_class>& gencol, const vector<mpq_class>& reducedCostCoefs, context_t* ctx) {
@@ -210,10 +228,6 @@ void APSATSolver::generateNextColumn(vector<mpq_class>& gencol, const vector<mpq
         yices_push(ctx);
         delete[] current_model;
     }
-}
-
-mpq_class APSATSolver::oSolve() {
-    return mpq_class(0.5);
 }
 
 APSATSolver::~APSATSolver() {

@@ -15,6 +15,7 @@ class APSATSolver
         void setProbabilities(const vector<mpq_class>& probs);
         void setGamma(const ClausalFormula& gamma);
         void setAuxColumns(const vector<vector<mpq_class>>& auxColumns);
+        void setAuxColumnsCost(const vector<int>& auxColumnsCost);
         void setNumVars(unsigned int);
         bool solve();
         mpq_class oSolve();
@@ -25,9 +26,9 @@ class APSATSolver
         unsigned int _numVars;
         vector<mpq_class> _probabilities;
         vector<vector<mpq_class>> _auxiliaryColumns;
+        vector<int> _auxiliaryColumnsCost;
         ClausalFormula _gamma;
         vector<term_t> _yices_vars;
-        unsigned int _columnId; //TEMPORARY
 };
 
 #endif // APSATSOLVER_H
