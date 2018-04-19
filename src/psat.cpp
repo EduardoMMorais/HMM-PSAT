@@ -6,7 +6,7 @@ const ::Clause TrueClause;
 const ClausalFormula TrueFormula({});
 
 std::ostream& operator<< (std::ostream& stream, const PSATInstance& psat) {
-    for (const pair<ConditionalFormula, double> &condform: psat) {
+    for (const pair<ConditionalFormula, mpq_class> &condform: psat) {
         stream << "P(" << condform.first.first;
         if (!condform.first.second.empty())
             stream << " | " << condform.first.second;
@@ -54,7 +54,7 @@ int PSATInstance::getDimacsNumCl() {
         convertToDIMACS();
     return numCl;
 }
-double* PSATInstance::getDimacsProbs() {
+mpq_class* PSATInstance::getDimacsProbs() {
     if (!convertedToDIMACS)
         convertToDIMACS();
     return probs;
@@ -65,14 +65,14 @@ const ClausalFormula& PSATInstance::getDimacsGamma() {
     return gamma;
 }
 
-vector<vector<double>>& PSATInstance::getDimacsExtraColumns() {
+vector<vector<mpq_class>>& PSATInstance::getDimacsExtraColumns() {
     if (!convertedToDIMACS)
         convertToDIMACS();
     return extraColumns;
 }
 
 void PSATInstance::convertToDIMACS() {
-    map<Literal, double> varsThatNeedProb;
+    map<Literal, mpq_class> varsThatNeedProb;
     // Count variables
     numVar = 0;
     for(auto it = cbegin(); it != cend(); it++) {
@@ -97,7 +97,7 @@ void PSATInstance::convertToDIMACS() {
     }
     numCl = gamma.size();
     numProb = varsThatNeedProb.size();
-    probs = new double[numProb+1];
+    probs = new mpq_class[numProb+1];
     remapVariables(varsThatNeedProb); // The vars that need prob NEED to come first...
     normalizeExtraColumns(); //We didn't know how many vars the extra columns needed
     convertedToDIMACS = true;
@@ -105,7 +105,7 @@ void PSATInstance::convertToDIMACS() {
 
 void PSATInstance::normalizeExtraColumns() {
     for(auto extraColumn: extraColumnsTmp) {
-        vector<double> newColumn(numProb+1, 0);
+        vector<mpq_class> newColumn(numProb+1, 0);
         for(auto colPosition: extraColumn){
             newColumn[literalMap[colPosition.first]] = colPosition.second;
         }
@@ -114,7 +114,7 @@ void PSATInstance::normalizeExtraColumns() {
     extraColumnsTmp.clear();
 }
 
-void PSATInstance::remapVariables(map<Literal, double> &varsThatNeedProb) {
+void PSATInstance::remapVariables(map<Literal, mpq_class> &varsThatNeedProb) {
     int varNum=1;
     probs[0] = 1;
     for(auto var: varsThatNeedProb) {
@@ -179,7 +179,7 @@ int PSATInstance::countVariables(const ::Clause &cl) {
     return maxLit;
 }
 
-void PSATInstance::addConditional(const ConditionalFormula &cf, double prob, map<Literal, double>& varsThatNeedProb) {
+void PSATInstance::addConditional(const ConditionalFormula &cf, mpq_class prob, map<Literal, mpq_class>& varsThatNeedProb) {
     Literal l1 = makeLiteral(cf.first),
         l2 = makeLiteral(cf.second),
         l3 = makeLiteralConjunction(l1, l2);
@@ -257,7 +257,7 @@ Literal PSATInstance::makeLiteral(const ::Clause& cl) {
     }
 }
 
-double PSATInstance::getSolutionProbability(const list<Literal>& literals, PSolverData& psd) {
+mpq_class PSATInstance::getSolutionProbability(const list<Literal>& literals, PSolverData& psd) {
     double prob = 0.0;
 /*    double **extendedBasis = psd._models;
     const vector<double> &basicSolution = psd._basicSolution;

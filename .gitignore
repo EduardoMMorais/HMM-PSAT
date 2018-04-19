@@ -36,4 +36,5 @@ bin/*/*
 
 # Other
 .vscode/*
-base.lp
+data/*
+*.lp

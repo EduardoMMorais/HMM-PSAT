@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <gmpxx.h>
 
 #include "c++11_warning.h"
 
@@ -38,28 +39,28 @@ public:
     ConditionalFormula(const ::Clause &c1, const ::Clause &c2): pair(ClausalFormula(c1), ClausalFormula(c2)) {};
 };
 
-class PSATInstance : public map<ConditionalFormula, double> {
+class PSATInstance : public map<ConditionalFormula, mpq_class> {
 public:
-    using map<ConditionalFormula, double>::map; //Inherit the base class' constructors
+    using map<ConditionalFormula, mpq_class>::map; //Inherit the base class' constructors
     int getDimacsNumPr();
     int getDimacsNumVar();
     int getDimacsNumCl();
-    double* getDimacsProbs();
+    mpq_class* getDimacsProbs();
     const ClausalFormula& getDimacsGamma();
-    vector<vector<double>>& getDimacsExtraColumns();
-    double getSolutionProbability(const list<Literal>& literals, PSolverData& psd);
+    vector<vector<mpq_class>>& getDimacsExtraColumns();
+    mpq_class getSolutionProbability(const list<Literal>& literals, PSolverData& psd);
     void solutionHasLiterals(const list<Literal>& literals, PSolverData& psd, int* columns);
 private:
     void convertToDIMACS();
     int countVariables(const ConditionalFormula &cf);
     int countVariables(const ClausalFormula &clf);
     int countVariables(const ::Clause &cl);
-    void addConditional(const ConditionalFormula &cf, double prob, map<Literal, double>& varsThatNeedProb);
+    void addConditional(const ConditionalFormula &cf, mpq_class prob, map<Literal, mpq_class>& varsThatNeedProb);
     Literal getRemmapedLiteral(const Literal orig) const {return literalMap.at(orig);}
     Literal makeLiteral(const ClausalFormula& clf);
     Literal makeLiteral(const ::Clause&);
     void addToGamma(const ClausalFormula& clf);
-    void remapVariables(map<Literal, double> &varsThatNeedProb);
+    void remapVariables(map<Literal, mpq_class> &varsThatNeedProb);
     void normalizeExtraColumns();
     Literal makeLiteralConjunction(Literal l1, Literal l2);
     bool convertedToDIMACS = false;
@@ -67,9 +68,9 @@ private:
     int numProb;
     int numVar;
     int numCl;
-    double* probs;
-    vector<vector<double>> extraColumns;
-    vector<map<int, double>> extraColumnsTmp;
+    mpq_class* probs;
+    vector<vector<mpq_class>> extraColumns;
+    vector<map<int, mpq_class>> extraColumnsTmp;
     map<Literal, Literal> literalMap;
 };
 

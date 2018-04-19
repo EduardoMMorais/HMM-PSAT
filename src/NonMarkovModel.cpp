@@ -59,7 +59,7 @@ PSATInstance NonMarkovModel::generatePSATInstance(const list<unsigned int> &sent
         vector<Tag> tagset(WINDOWSIZE, 0);
         do {
             ClausalFormula tagSetFormula;
-            double sentenceProbabilityGivenTagSet = 1.0;
+            mpq_class sentenceProbabilityGivenTagSet = 1.0;
             list<unsigned int>::const_iterator wordIt = sentence.cbegin();
             for (unsigned int start_position = 0; start_position < wws; ++start_position) ++wordIt;
             for(wi = 0; wi < WINDOWSIZE; ++wi, ++wordIt) {

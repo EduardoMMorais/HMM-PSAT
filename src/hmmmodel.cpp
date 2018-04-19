@@ -43,7 +43,7 @@ PSATInstance HMMModel::generatePSATInstance(const list<unsigned int> &sentence) 
     vector<Tag> tagset(sentence.size(), 0);
     do {
         ClausalFormula tagSetFormula;
-        double sentenceProbabilityGivenTagSet = 1.0,
+        mpq_class sentenceProbabilityGivenTagSet(1,1),
             taggingProbability = getInitialProbability(tagset[0]);
         wi = 0;
         for(unsigned int word: sentence) {
